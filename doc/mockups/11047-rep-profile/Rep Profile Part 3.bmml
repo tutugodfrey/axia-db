@@ -1,0 +1,58 @@
+<mockup version="1.0" skin="sketch" fontFace="Balsamiq Sans" measuredW="1320" measuredH="681" mockupW="1309" mockupH="681">
+  <controls>
+    <control controlID="38" controlTypeID="com.balsamiq.mockups::Canvas" x="220" y="0" w="790" h="614" measuredW="100" measuredH="70" zOrder="0" locked="false" isInGroup="-1"/>
+    <control controlID="96" controlTypeID="com.balsamiq.mockups::StickyNote" x="220" y="6" w="774" h="123" measuredW="109" measuredH="123" zOrder="1" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Rep%20Profile%20continued%0ANOTE%3A%20This%20page%20goes%20before%20the%20BET%20TABLES%20in%20part%20II</text>
+      </controlProperties>
+    </control>
+    <control controlID="116" controlTypeID="com.balsamiq.mockups::IconLabel" x="228" y="138" w="-1" h="-1" measuredW="94" measuredH="24" zOrder="2" locked="false" isInGroup="-1">
+      <controlProperties>
+        <icon>PencilIcon%7Csmall</icon>
+        <labelPosition>left</labelPosition>
+        <text>App%20Status</text>
+      </controlProperties>
+    </control>
+    <control controlID="117" controlTypeID="com.balsamiq.mockups::DataGrid" x="228" y="162" w="-1" h="-1" measuredW="881" measuredH="291" zOrder="3" locked="false" isInGroup="-1">
+      <controlProperties>
+        <hasHeader>true</hasHeader>
+        <text>App%20Status%20Options%3A%09Rep%20Cost%09Axia%20Cost%09Rep%20Expedite%20Cost%09Axia%20Expedite%20Cost%20%28TSYS%29%09Axia%20Expedite%20Cost%20%28Sage%29%0APaper%20App%20with%20shipped%20starter%20kit%0935%09%0950%090%0950%0AOnline%20App%20with%20shipped%20starter%20kit%0930%09%0950%090%0950%0APaper%20App%20with%20emailed%20starter%20kit%0925%09%0950%090%0950%0AOnline%20App%20with%20emailed%20starter%20kit%0920%09%0950%090%0950%0APaper%20App%20with%20shipped%20S/K%20%28add.%20Location%29%0927.5%09%0950%090%0950%0AOnline%20App%20with%20shipped%20S/K%20%28add.%20Location%29%0922.5%09%0950%090%0950%0APaper%20App%20with%20emailed%20S/K%20%28add.%20Location%29%0917.5%09%0950%090%0950%0AOnline%20App%20with%20emailed%20S/K%20%28add.%20Location%29%0912.5%09%0950%090%0950%0AStarter%20Kit%20Cost%20Waived%20%28exception%29%090%09%0950%090%0950</text>
+      </controlProperties>
+    </control>
+    <control controlID="118" controlTypeID="com.balsamiq.mockups::IconLabel" x="228" y="474" w="-1" h="-1" measuredW="116" measuredH="24" zOrder="4" locked="false" isInGroup="-1">
+      <controlProperties>
+        <icon>PencilIcon%7Csmall</icon>
+        <labelPosition>left</labelPosition>
+        <text>Equipment%20List</text>
+      </controlProperties>
+    </control>
+    <control controlID="119" controlTypeID="com.balsamiq.mockups::DataGrid" x="228" y="498" w="565" h="51" measuredW="363" measuredH="51" zOrder="5" locked="false" isInGroup="-1">
+      <controlProperties>
+        <hasHeader>true</hasHeader>
+        <text>Item%09%20True%20Cost%20%09%20Rep%20Cost%20%09%20Partner%20Cost%20%0AVx570%2012meg%20new%09%20%24200.00%20%20%09%20%24259.00%20%09%20%24269.00%20</text>
+      </controlProperties>
+    </control>
+    <control controlID="120" controlTypeID="com.balsamiq.mockups::StickyNote" x="848" y="475" w="472" h="123" measuredW="109" measuredH="123" zOrder="6" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Take%20equipment%20list%20revisions%20and%20add%20the%20list%20here%0AMaster%20list%20updates%20get%20pushed%20out%20to%20all%20users%20%28similar%20to%20BET%20updates%29</text>
+      </controlProperties>
+    </control>
+    <control controlID="121" controlTypeID="com.balsamiq.mockups::Image" x="114" y="614" w="1003" h="38" measuredW="77" measuredH="79" zOrder="7" locked="false" isInGroup="-1">
+      <controlProperties>
+        <src>./assets/footer.png</src>
+      </controlProperties>
+    </control>
+    <control controlID="122" controlTypeID="com.balsamiq.mockups::StickyNote" x="11" y="162" w="194" h="283" measuredW="109" measuredH="123" zOrder="8" locked="false" isInGroup="-1">
+      <controlProperties>
+        <color>13576743</color>
+        <text>Check%20if%20a%20table%20exists%2C%20if%20not%0Arep_cost_structures%20should%20have%20the%20contents%0A%20%0ALet%27s%20migrate%20and%20add%20a%20NEW%20table%20for%20app_statuses%20configuration%2C%20adding%203%20columns%20NOT%20dynamic%3A%0A%20%20-%20Axia%20Expedite%20Cost%0A%20%20-%20Axia%20Expedite%20Cost%20TSYS%0A%20%20-%20Axia%20Expedite%20Cost%20Sage</text>
+      </controlProperties>
+    </control>
+    <control controlID="123" controlTypeID="com.balsamiq.mockups::StickyNote" x="11" y="474" w="194" h="207" measuredW="109" measuredH="123" zOrder="9" locked="false" isInGroup="-1">
+      <controlProperties>
+        <color>13576743</color>
+        <text>Tables%3A%0Aequipment_items%2C%20equipment_types%0A%20%0AStore%20a%20per-user%20cost%20for%20each%20item.%20use%20a%20default%20value%20from%20equipment_items%20and%20let%20the%20admin%20change%20that%20per%20user</text>
+      </controlProperties>
+    </control>
+  </controls>
+</mockup>

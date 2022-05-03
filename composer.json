@@ -1,0 +1,70 @@
+{
+	"name": "axia-db/app",
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "git@git.cakedc.com:cakedc/db_test.git"
+		},
+		{
+			"type": "vcs",
+			"url": "git@git.cakedc.com:cakedc/rbac.git"
+		},
+		{
+        	"type": "vcs",
+            "url": "git@git.cakedc.com:plugins/loggable.git"
+        },
+		{
+			"type": "vcs",
+			"url": "https://github.com/deizel/puphpet-release"
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/CakeDC/progress_bar.git"
+		}
+	],
+	"require": {
+		"cakedc/db_test": "~2.1",
+		"cakedc/migrations": "dev-master",
+		"cakedc/rbac": "dev-master",
+		"cakedc/loggable": "dev-master",
+		"cakedc/progress_bar": "dev-develop",
+		"cakedc/search": "dev-master",
+		"cakedc/templates": "dev-master",
+		"cakedc/utils": "~1.4",
+		"cakephp/cakephp": "2.10.24",
+		"cakephp/debug_kit": "2.2.*",
+		"phpunit/phpunit": "3.7.32",
+		"phpoffice/phpexcel": "dev-master",
+		"slywalker/boost_cake": "*",
+		"burzum/cakephp-file-storage": "~0.5",
+		"markstory/asset_compress": "0.19",
+		"dereuromark/cakephp-shim": "0.1.*",
+		"ircmaxell/password-compat": "1.0.*",
+		"friendsofcake/cakephp-csvview": "1.2.0",
+		"kamisama/cake-resque": ">=4.1.0",
+		"ircmaxell/random-lib": "^1.2",
+		"zircote/swagger-php": "^3.0"
+	},
+	"extra": {
+		"installer-paths": {
+			"app/Plugin/DbTest": ["cakedc/db_test"],
+			"app/Plugin/Migrations": ["cakedc/migrations"],
+			"app/Plugin/Rbac": ["cakedc/rbac"],
+			"app/Plugin/Loggable": ["cakedc/loggable"],
+			"app/Plugin/ProgressBar": ["cakedc/progress_bar"],
+			"app/Plugin/Search": ["cakedc/search"],
+			"app/Plugin/Templates": ["cakedc/templates"],
+			"app/Plugin/Utils": ["cakedc/utils"],
+			"app/Plugin/DebugKit": ["cakephp/debug_kit"],
+			"app/Plugin/BoostCake": ["slywalker/boost_cake"],
+			"app/Plugin/FileStorage": ["burzum/cakephp-file-storage"],
+			"app/Plugin/AssetCompress": ["markstory/asset_compress"],
+			"app/Plugin/Shim": ["dereuromark/cakephp-shim"],
+			"app/Plugin/CsvView": ["friendsofcake/cakephp-csvview"],
+			"app/Plugin/CakeResque": ["kamisama/cake-resque"]
+		}
+	},
+	"config": {
+		"vendor-dir": "app/Vendor/"
+	}
+}

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="axia-db" default="build-parallel">
+  <target name="build"
+    depends="prepare,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,phpunit,phpcb"/>
+
+  <target name="build-parallel"
+    depends="prepare,lint,tools-parallel,phpunit,phpcb"/>
+
+  <target name="tools-parallel" description="Run tools in parallel">
+    <parallel threadCount="2">
+    <sequential>
+      <antcall target="prepare"/>
+      <antcall target="pdepend"/>
+      <antcall target="phpmd-ci"/>
+    </sequential>
+      <antcall target="phpcpd"/>
+      <antcall target="phpcs-ci"/>
+      <antcall target="phploc"/>
+      <antcall target="phpdox"/>
+    </parallel>
+  </target>
+
+  <target name="build-smoke"
+    description="Jenkin's target for smoke builds; prepare, migrate, phpunit">
+    <antcall target="prepare"/>
+    <antcall target="phpunit"/>
+  </target>
+
+  <target name="build-nightly"
+    description="Jenkin's target for nightly builds; build-parallel">
+    <antcall target="build-parallel"/>
+  </target>
+
+  <target name="clean"
+    description="Cleanup build artifacts">
+    <delete dir="${basedir}/build/logs"/>
+    <delete dir="${basedir}/build/pdepend"/>
+    <delete dir="${basedir}/build/reports"/>
+    <delete dir="${basedir}/app/webroot/coverage"/>
+    <delete dir="${basedir}/app/webroot/code-browser"/>
+    <delete dir="${basedir}/app/webroot/api"/>
+  </target>
+
+  <target name="prepare" depends="clean"
+    description="Prepare for build">
+    <mkdir dir="${basedir}/build/logs"/>
+    <mkdir dir="${basedir}/build/pdepend"/>
+    <mkdir dir="${basedir}/build/reports"/>
+    <mkdir dir="${basedir}/app/webroot/coverage"/>
+    <mkdir dir="${basedir}/app/webroot/code-browser"/>
+    <mkdir dir="${basedir}/app/webroot/api"/>
+    <delete file="app/Config/core.php" failonerror="false"/>
+    <copy file="/var/lib/jenkins/project_config/db_core.php" tofile="app/Config/core.php"/>
+    <delete file="app/Config/database.php" failonerror="false"/>
+    <copy file="/var/lib/jenkins/project_config/axia-db_database.php" tofile="app/Config/database.php"/>
+    <delete file="app/Config/womply.pub" failonerror="false"/>
+    <copy file="/var/lib/jenkins/project_config/womply.pub" tofile="app/Config/womply.pub"/>
+    <delete file="app/Config/womply" failonerror="false"/>
+    <copy file="/var/lib/jenkins/project_config/womply" tofile="app/Config/womply"/>
+    <exec executable="/usr/local/bin/composer" dir="${basedir}">
+      <arg line="self-update"/>
+    </exec>
+    <exec executable="/usr/local/bin/composer" dir="${basedir}">
+      <arg line="install"/>
+    </exec>
+    <exec executable="/usr/local/bin/composer" dir="${basedir}">
+      <arg line="update"/>
+    </exec>
+    <exec executable="${basedir}/app/Console/cake" failonerror="false">
+      <arg line="DbTest.db_test -i"/>
+    </exec>
+  </target>
+
+  <target name="lint"
+    description="Perform syntax check of sourcecode files">
+    <apply executable="php" failonerror="true">
+      <arg value="-l" />
+      <fileset dir="${basedir}/app">
+        <include name="**/*.php" />
+        <exclude name="**/Lib/**" />
+        <exclude name="**/Locale/**" />
+        <exclude name="**/Plugin/**" />
+        <exclude name="**/tmp/**" />
+        <exclude name="**/vendor/**" />
+        <exclude name="**/Vendor/**" />
+        <modified />
+      </fileset>
+    </apply>
+  </target>
+
+  <target name="phploc"
+    description="Measure project size using PHPLOC">
+    <exec executable="bash" dir="${basedir}">
+      <arg value="-c"/>
+      <arg value="phploc --log-csv 'build/logs/phploc.csv' 'app'"/>
+    </exec>
+  </target>
+
+  <target name="pdepend"
+    description="Calculate software metrics using PHP_Depend">
+    <exec executable="bash" dir="${basedir}">
+      <arg value="-c"/>
+      <arg value="pdepend --summary-xml='build/pdepend/summary.xml' --jdepend-chart='build/pdepend/dependencies.svg' --overview-pyramid='build/pdepend/overview-pyramid.svg' --jdepend-xml='build/logs/jdepend.xml' --ignore=Console,Locale,Plugin,vendor,Vendor 'app'"/>
+    </exec>
+  </target>
+
+  <target name="phpmd"
+    description="Perform project mess detection using PHPMD and print human readable output. Intended for usage on the command line before committing.">
+    <exec executable="bash" dir="${basedir}">
+      <arg value="-c"/>
+      <arg value="phpmd 'app' text codesize,unusedcode,naming --exclude 'Console,Plugin,tmp,vendor,Vendor' --reportfile 'build/logs/phpmd.txt'"/>
+    </exec>
+  </target>
+
+  <target name="phpmd-ci"
+    description="Perform project mess detection using PHPMD creating a log file for the continuous integration server">
+    <exec executable="bash" dir="${basedir}">
+      <arg value="-c"/>
+      <arg value="phpmd 'app' xml codesize,unusedcode,naming --exclude 'Console,Plugin,tmp,vendor,Vendor' --reportfile 'build/logs/phpmd.xml'"/>
+    </exec>
+  </target>
+
+  <target name="phpcs"
+    description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
+    <exec executable="bash" dir="${basedir}">
+      <arg value="-c"/>
+      <arg value="phpcs -v -n --standard=CakePHP --report=summary --ignore=Console,Plugin,tmp,vendor,Vendor,webroot,.css,.js 'app'"/>
+    </exec>
+  </target>
+
+  <target name="phpcs-ci"
+    description="Find coding standard violations using PHP_CodeSniffer creating a log file for the continuous integration server">
+    <exec executable="bash" dir="${basedir}">
+      <arg value="-c"/>
+      <arg value="phpcs -n --standard=CakePHP --ignore=Console,Plugin,tmp,Test,vendor,Vendor,webroot,.css,.js --report-full='build/logs/phpcs_full.txt' 'app'"/>
+    </exec>
+  </target>
+
+  <target name="phpcpd"
+    description="Find duplicate code using PHPCPD">
+    <exec executable="bash" dir="${basedir}">
+      <arg value="-c"/>
+      <arg value="phpcpd --progress --exclude=Vendor --exclude=Plugin --exclude=vendor --log-pmd 'build/logs/pmd-cpd.xml' 'app'"/>
+    </exec>
+  </target>
+
+  <target name="phpdox" description="Generate API documentation using phpDox">
+    <exec executable="bash" dir="${basedir}">
+      <arg value="-c"/>
+      <arg value="phpdox -f phpdox.xml.dist" />
+    </exec>
+  </target>
+
+  <target name="phpunit" description="Run unit tests with PHPUnit" depends="ensure-tmp-folders">
+    <exec executable="bash" failonerror="true" dir="${basedir}/app">
+      <arg value="-c"/>
+      <arg value="Console/cake DbTest.db_test --stderr --testdox --log-junit '../build/reports/junit.xml' --coverage-html 'webroot/coverage' --coverage-clover '../build/reports/coverage-clover.xml' --configuration '../phpunit.xml' app AllTests"/>
+    </exec>
+  </target>
+
+  <target name="ensure-tmp-folders">
+    <mkdir dir="${basedir}/app/tmp/"/>
+    <mkdir dir="${basedir}/app/tmp/cache"/>
+    <mkdir dir="${basedir}/app/tmp/cache/persistent"/>
+    <mkdir dir="${basedir}/app/tmp/cache/models"/>
+    <mkdir dir="${basedir}/app/tmp/cache/views"/>
+    <mkdir dir="${basedir}/app/tmp/logs"/>
+    <mkdir dir="${basedir}/app/tmp/tests"/>
+    <mkdir dir="${basedir}/app/tmp/sessions"/>
+  </target>
+
+  <target name="phpcb" description="Aggregate tool output with PHP_CodeBrowser">
+    <exec executable="bash" dir="${basedir}">
+      <arg value="-c" />
+      <arg value="phpcb --log 'build/logs' --source 'app' --output 'app/webroot/code-browser' --ignore 'app/Plugin,app/tmp,app/vendor,app/Vendor'" />
+    </exec>
+  </target>
+</project>

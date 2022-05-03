@@ -1,0 +1,51 @@
+<mockup version="1.0" skin="sketch" fontFace="Balsamiq Sans" measuredW="1050" measuredH="725" mockupW="1021" mockupH="704">
+  <controls>
+    <control controlID="0" controlTypeID="com.balsamiq.mockups::SubTitle" x="29" y="21" w="-1" h="-1" measuredW="295" measuredH="27" zOrder="0" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Edit%20Rep%20Goals%20and%20Pricing</text>
+      </controlProperties>
+    </control>
+    <control controlID="1" controlTypeID="com.balsamiq.mockups::DataGrid" x="29" y="63" w="614" h="141" measuredW="300" measuredH="141" zOrder="1" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Role%2CName%2CPermission%20Level%0APartner%20Rep%2C%20John%20Doe%2C%20Partner%20Rep%0ARep%2C%20Mike%20Doe%2C%20Partner%20Rep%0ASales%20Manager%2CSpence%20Doe%2C%20SM2%0AInstaller%2CJoe%20Doe%2C%20Installer</text>
+      </controlProperties>
+    </control>
+    <control controlID="2" controlTypeID="com.balsamiq.mockups::ComboBox" x="29" y="219" w="165" h="-1" measuredW="98" measuredH="93" zOrder="2" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Select%20Role%0APartner%20Rep%0ARep%0ASales%20Manager%0AInstaller</text>
+      </controlProperties>
+    </control>
+    <control controlID="3" controlTypeID="com.balsamiq.mockups::ComboBox" x="194" y="219" w="165" h="-1" measuredW="101" measuredH="62" zOrder="3" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Select%20User%0A%28Dynamically%20Loads%20after%20Role%20Selection%29%0AAll%20users%20of%20the%20given%20Role</text>
+      </controlProperties>
+    </control>
+    <control controlID="4" controlTypeID="com.balsamiq.mockups::ComboBox" x="359" y="219" w="367" h="-1" measuredW="171" measuredH="109" zOrder="4" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Select%20Permission%20Level%0A%28Dynamically%20Loads%20after%20Role%20Selection%29%0AIF%20Role%20%3D%3D%20Sales%20Manager%20then%20%7BSM%2C%20SM2%7D%0AIF%20Role%20%3D%3D%20Installer%20then%20%7BInstaller%7D%0AIF%20Role%20%3D%3D%20%28Partner%20Rep%20OR%20Rep%29%20then%20%7BRep%2C%20Partner%20Rep%7D%0A%20</text>
+      </controlProperties>
+    </control>
+    <control controlID="5" controlTypeID="com.balsamiq.mockups::Button" x="726" y="219" w="103" h="26" measuredW="72" measuredH="27" zOrder="5" locked="false" isInGroup="-1">
+      <controlProperties>
+        <icon>CircledPlusIcon%7Csmall</icon>
+        <text>Add</text>
+      </controlProperties>
+    </control>
+    <control controlID="6" controlTypeID="com.balsamiq.mockups::StickyNote" x="29" y="475" w="753" h="250" measuredW="109" measuredH="123" zOrder="6" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Validation%3A%0A%20%0AUser%20Name%20should%20be%20unique%2C%20no%202%20users%20with%20different%20roles%20or%20permission%20levels%0AAmount%20limits%3A%0AManagers%3B%200..3%0AInstallers%3A%200..3%0APartner%20Rep%200..1%0ARep%3A%200..1%0A%20</text>
+      </controlProperties>
+    </control>
+    <control controlID="7" controlTypeID="com.balsamiq.mockups::StickyNote" x="900" y="328" w="150" h="166" measuredW="109" measuredH="123" zOrder="7" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Click%20add%20will%20store%20the%20new%20user%20and%20reload%20the%20page</text>
+      </controlProperties>
+    </control>
+    <control controlID="8" controlTypeID="com.balsamiq.mockups::Arrow" x="829" y="228" w="-1" h="-1" measuredW="150" measuredH="100" zOrder="8" locked="false" isInGroup="-1"/>
+    <control controlID="9" controlTypeID="com.balsamiq.mockups::Button" x="29" y="360" w="85" h="36" measuredW="64" measuredH="27" zOrder="9" locked="false" isInGroup="-1">
+      <controlProperties>
+        <text>Cancel</text>
+      </controlProperties>
+    </control>
+  </controls>
+</mockup>

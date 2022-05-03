@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+ backupStaticAttributes="false"
+ cacheTokens="false"
+ colors="false"
+ convertErrorsToExceptions="true"
+ convertNoticesToExceptions="true"
+ convertWarningsToExceptions="true"
+ forceCoversAnnotation="false"
+ mapTestClassNameToCoveredClassName="false"
+ processIsolation="false"
+ stopOnError="false"
+ stopOnFailure="false"
+ stopOnIncomplete="false"
+ stopOnSkipped="false"
+ strict="false"
+ verbose="false"
+ >
+ <testsuites>
+  <testsuite name="AllTests">
+   <directory>app</directory>
+  </testsuite>
+ </testsuites>
+ <filter>
+  <blacklist>
+   <directory suffix=".php">app/Config</directory>
+   <directory suffix=".php">app/Console</directory>
+   <directory suffix=".php">app/Lib</directory>
+   <directory suffix=".php">app/Locale</directory>
+   <directory suffix=".php">app/Plugin</directory>
+   <directory suffix=".php">app/tmp</directory>
+   <directory suffix=".php">app/Test</directory>
+   <directory suffix=".php">app/vendor</directory>
+   <directory suffix=".php">app/Vendor</directory>
+   <directory suffix=".php">app/webroot</directory>
+   <directory suffix=".php">cakephp</directory>
+   <directory suffix=".php">build</directory>
+   <directory suffix=".php">lib</directory>
+  </blacklist>
+ </filter>
+</phpunit>

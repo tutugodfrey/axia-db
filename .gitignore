@@ -1,0 +1,56 @@
+##
+## Batch Files
+##
+app/cake.bat
+app/case.bat
+##
+## Site configuration
+##
+app/Config/database.php
+app/Config/bootstrap.php
+app/Config/core.php
+app/Config/email.php
+app/Config/womply
+app/Config/womply.pub
+##
+## Temporary files
+##
+app/tmp/*
+app/files/*
+app/webroot/files/*
+app/webroot/cache_js/*.js
+app/webroot/cache_css/*.css
+app/webroot/coverage/
+##
+## Development meta files
+##
+.buildpath
+.project
+.settings/
+.DS_Store
+.idea
+*.sublime-*
+MigrationsBackup*
+php-short-array-syntax-converter
+Thumbs.db
+pmip
+.metadata
+nbproject
+app/dump.rdb
+##
+## Composer
+##
+app/Plugin/*
+app/Vendor/*
+##
+## PuPHPet files
+##
+/Vagrantfile
+/puphpet/
+/.vagrant/
+##
+## Api Documentation with swagger
+##
+app/webroot/AxiaApiDocs/*
+
+app/.scannerwork
