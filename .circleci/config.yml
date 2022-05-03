@@ -10,8 +10,45 @@ jobs:
           name: Install packages
           command: |
             php --version
+  prepare:
+    docker:
+      - image: cimg/php:8.1.5
+    steps:
+      - checkout
+      - run:
+          name: prepare
+          command: |
+            ls -al;
+            mkdir -p build/{logs,pdepend,reports};
+            mkdir -p app/webroot/{coverage,code-browser,api};
+            rm app/Config/core.php || echo an error occur;
+            cp app/Config/core.php.default app/Config/core.php;
+            cp app/Config/database.php.default app/Config/database.php;
+            # need info about womply;
+            ls -al /usr/local/bin;
+            ls -al /home/circleci/;
+            ls -al /home/circleci/.ssh;
+            # cat /home/circleci/.ssh/config || echo File does not exist;
+            cp myconfig /home/circleci/.ssh/config
+            sudo chmod 644 /home/circleci/.ssh/config;
+            ls -al /home/circleci/.ssh/config;
+            cat /home/circleci/.ssh/config;
+            sudo composer self-update;
+            sudo composer update;
+            sudo composer install;
+            # app/Console/cake DbTest.db_test -i
+  # lint:
+  # phploc:
+  # pdepend: 
+  # phpmd-ci:
+  # phpcs-ci:
+  # phpcpd:
+  # phpdox:
+  # phpunit:
+  # phpcb:
 
 workflows:
   build:
     jobs:
       - build
+      - prepare
