@@ -1,0 +1,12 @@
+#axia deply account
+# Host git.axiatech.com
+#        HostName git.axiatech.com
+#        User git
+#        IdentityFile ~/.ssh/om_id_rsa
+
+#axia deply account
+Host git.cakedc.com
+        HostName git.cakedc.com
+        User git
+        StrictHostKeyChecking no
+        IdentityFile ~/.ssh/axiadeploy
