@@ -31,68 +31,38 @@ jobs:
 
     steps:
       - checkout
-      # - add_ssh_keys:
-      #     fingerprints:
-      #     - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
-
       - run:
           name: prepare
           command: |
-            sudo apt-get update
-            sudo apt-get install postgresql-client
-            env
-            whoami
-            TEST_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost/${POSTGRES_DB}
-            echo DB name ${POSTGRES_USER}
-            echo DB name ${POSTGRES_DB}
-            echo DB PASS ${POSTGRES_PASSWORD}
-            psql -d $TEST_DATABASE_URL -c "CREATE TABLE test (name char(25));"
-            psql -d $TEST_DATABASE_URL -c "INSERT INTO test VALUES ('John'), ('Joanna'), ('Jennifer');"
-            # psql -d $TEST_DATABASE_URL -c "SELECT * from test;"
+            mkdir test1
+            mkdir test1/test2
+            touch test1/test2/file1.txt
+            echo Persisted to workspace > test1/test2/file1.txt
+            mkdir myspace
+            mkdir myspace/space1
+            echo Is the file persisted > myspace/space1/test.txt
+            ls -al
+      - persist_to_workspace:
+          root: ~/
+          paths: "*"
 
-            cp ~/.ssh/id_rsa_6ad8727664425a7176a1552d82107604 ~/.ssh/axiadeploy
-            mkdir -p build/{logs,pdepend,reports};
-            mkdir -p app/webroot/{coverage,code-browser,api};
-            mkdir -p app/tmp/{logs,tests,sessions,cache}
-            mkdir -p app/tmp/cache/{persistent,models,views}
-            # rm app/Config/core.php || echo an error occur;
-            cp app/Config/core.php.default app/Config/core.php;
-            cp app/Config/database.php.default app/Config/database.php;
-            echo ${WOMPLY_PRI_KEY} > app/Config/womply;
-            echo {WOMPLY_PUB_KEY} > app/Config/womply.pub;
-            cp ssh-config ~/.ssh/config
-            chmod 644 ~/.ssh/config;
-            git clone -b 2.1.1 git@git.cakedc.com:cakedc/db_test.git app/Plugin/DbTest
-            wget -O ceeram-GoogleAuthenticate-df25ff4.zip http://github.com/ceeram/GoogleAuthenticate/zipball/master
-            unzip ceeram-GoogleAuthenticate-df25ff4.zip -d app/Plugin/GoogleAuthenticate
-            composer --version
-            # Setup environment variables
-            DB_FILE=app/Config/database.php
-            echo DB name ${POSTGRES_USER}
-            echo DB name ${POSTGRES_DB}
-            DATABASE_HOST=localhost
-            DATABASE_PW=''
-            DATABASE_LOGIN=${POSTGRES_USER}
-            DATABASE_NAME=${POSTGRES_DB}
-            sed -i 's/DATABASE_HOST/'${DATABASE_HOST}'/' $DB_FILE
-            sed -i 's/DATABASE_NAME/'${DATABASE_NAME}'/' $DB_FILE
-            sed -i 's/DATABASE_LOGIN/'${DATABASE_LOGIN}'/' $DB_FILE
-            sed -i 's/DATABASE_PW/'${DATABASE_PW}'/' $DB_FILE
-            export COMPOSER_NO_INTERACTION=1
-            sudo composer self-update;
-            composer update;
-            composer install;
-            echo "------PASSING-----"
-            app/Console/cake DbTest.db_test -i
 
   lint:
     <<: *phpimg
 
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/
       - run:
           name: Lint
           command: |
+            ls -al
+            ls -al myspace
+            ls -al myspace/space1
+            ls -al test1
+            ls -al test1/test2
+            cat test1/test2/file1.txt
             php -l --exclude='Vendor,Plugin,vendor,Lib,Locale,tmp,*.php' app
             # echo "run lint"
   
@@ -156,7 +126,7 @@ jobs:
       - run:
           name: phpcs
           command: |
-            # bash -c phpcs -v -n --standard-CakePHP --report=summary --ignore=Console,Plugin,tmp,vendor,Vendor,webroot,.css,.js app
+            phpcs -v -n --standard=CakePHP --report=summary --ignore=Console,Plugin,tmp,vendor,Vendor,webroot,.css,.js app
             echo "Run phpcs"
 
   phpcs-ci:
@@ -238,6 +208,8 @@ workflows:
           requires: [ prepare ]
       - phpmd-ci:
           requires: [ prepare, pdepend ]
+      - lint:
+          requires: [ prepare ]
       - phpcpd
       - phpcs-ci
       - phploc
