@@ -65,6 +65,10 @@
 		}
 	},
 	"config": {
-		"vendor-dir": "app/Vendor/"
+		"vendor-dir": "app/Vendor/",
+		"allow-plugins": {
+			"composer/installers": true,
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
 	}
 }

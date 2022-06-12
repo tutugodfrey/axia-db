@@ -2,7 +2,6 @@ version: 2.1
 
 phpimg: &phpimg
   docker:
-    # - image: cimg/php:8.1.5
     - image: cimg/php:7.4.26
       environment:
         POSTGRES_USER: postgres
@@ -15,7 +14,6 @@ phpimg: &phpimg
 
 phpimg2: &phpimg2
   docker:
-    # - image: cimg/php:8.1.5
     - image: cimg/php:7.0.33
       environment:
         POSTGRES_USER: postgres
@@ -26,23 +24,46 @@ phpimg2: &phpimg2
       environment:
         POSTGRES_USER: postgres
 
+ubuntuimg: &ubuntuimg
+  docker:
+    - image: ubuntu:20.04
+  working_directory: ~/online-application
+
+ubuntuwithpg: &ubuntuwithpg
+  docker:
+    - image: ubuntu:20.04
+      environment:
+        POSTGRES_USER: postgres
+        PGPASSWORD: ax!a
+        DATABASE_URL: postgresql://postgres@localhost:5432/postgres
+
+    - image: postgres:latest
+      environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: ax!a
+  working_directory: ~/online-application
 
 commands:
   setups:
     steps:
       - run:
           command: |
-            sudo apt-get update
+            ./setup.sh
 
-  cake_setup:
+  setup_directories:
+    steps:
+      - run:
+        command: |
+          mkdir -p build/{logs,pdepend,reports}
+          mkdir -p app/webroot/{coverage,code-browser,api}
+          mkdir -p app/tmp/{logs,tests,sessions,cache}
+          mkdir -p app/tmp/cache/{persistent,models,views}
+
+  setup_cakephp:
     steps:
       - run:
           command: |
             cp ~/.ssh/id_rsa_6ad8727664425a7176a1552d82107604 ~/.ssh/axiadeploy
-            mkdir -p build/{logs,pdepend,reports};
-            mkdir -p app/webroot/{coverage,code-browser,api};
-            mkdir -p app/tmp/{logs,tests,sessions,cache}
-            mkdir -p app/tmp/cache/{persistent,models,views}
             cp app/Config/core.php.default app/Config/core.php;
             cp app/Config/axia-test-database.php app/Config/database.php;
             echo ${WOMPLY_PRI_KEY} > app/Config/womply;
@@ -52,8 +73,13 @@ commands:
             git clone -b 2.1.1 git@git.cakedc.com:cakedc/db_test.git app/Plugin/DbTest
             wget -O ceeram-GoogleAuthenticate-df25ff4.zip http://github.com/ceeram/GoogleAuthenticate/zipball/master
             unzip ceeram-GoogleAuthenticate-df25ff4.zip -d app/Plugin/GoogleAuthenticate
+
+  setup_composer:
+    steps:
+      - run:
+          command: |
             export COMPOSER_NO_INTERACTION=1
-            sudo composer self-update;
+            composer self-update;
             composer update;
             composer install;
 
@@ -62,11 +88,11 @@ commands:
       - run:
           name: Setup PG dump
           command: |
-            sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-            sudo apt -y update
-            sudo apt -y install postgresql-14
-            sudo ln -s /usr/lib/postgresql/14/bin/pg_dump /usr/bin/pg_dump --force
+            sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+            apt -y update
+            apt -y install postgresql-14
+            ln -s /usr/lib/postgresql/14/bin/pg_dump /usr/bin/pg_dump --force
 
   setup_db_permissions:
     steps:
@@ -84,25 +110,28 @@ commands:
 
 jobs:
   prepare:
-    <<: *phpimg
+    <<: *ubuntuwithpg
     steps:
+      # - add_ssh_keys:
+      #     fingerprints:
+      #       - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
       - checkout
-      - add_ssh_keys:
-          fingerprints:
-          - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
       - setups
       - setup_pg_client
       - setup_db_permissions
-      - cake_setup
+      - setup_cakephp
       - run:
           name: prepare
           command: |
-            app/Console/cake DbTest.db_test -i
-            ls -al
+            echo Build is passing
+            # app/Console/cake DbTest.db_test -i
+
+      - persist_to_workspace:
+          root: ~/
+          paths: "*"
 
   lint:
-    <<: *phpimg
-
+    <<: *ubuntuimg
     steps:
       - checkout
       - setups
@@ -112,234 +141,466 @@ jobs:
             php -l app  
 
   phploc:
-    <<: *phpimg
+    <<: *ubuntuimg
     steps:
       - checkout
       - setups
+      - setup_directories
       - run:
-          name: phploc
+          name: Phploc
           command: |
-            # bash -c phploc --log-csv build/logs/phploc.csv app
-            # echo "Run phploc"
-     
+            apt-get update -y
+            apt-get install phploc -y
+            phploc --log-csv build/logs/phploc.csv app
+
   pdepend:
-    <<: *phpimg
+    <<: *ubuntuimg
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints:
-          - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
       - setups
-      - cake_setup
+      - setup_directories
+      - setup_composer
       - run:
-          name: pdepend
+          name: Pdepend
           command: |
             composer global require pdepend/pdepend
-            sudo  ln -s /home/circleci/.config/composer/vendor/bin/pdepend /usr/bin/pdepend
+            ln -s /home/circleci/.config/composer/vendor/bin/pdepend /usr/bin/pdepend
             pdepend --summary-xml=build/pdepend/summary.xml \
               --jdepend-chart=build/pdepend/dependencies.svg \
               --overview-pyramid=build/pdepend/overview-pyramid.svg \
               --jdepend-xml=build/logs/jdepend.xml \
               --ignore=Console,Locale,Plugin,vendor,Vendor app
-            echo  "Run pdepend"
+
 
   phpmd:
-    <<: *phpimg
+    <<: *ubuntuimg
     steps:
-    - checkout
-    - add_ssh_keys:
-        fingerprints:
-        - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
-    - setups
-    - cake_setup
-    - run:
-        name: phpmd
-        command: |
-          composer global require phpmd/phpmd
-          echo INSTALLATION COMPLETEED
-          phpmd app text codesize,unusedcode,naming \
-            --exclude 'Console,Plugin,tmp,vendor,Vendor' \
-            --ignore-violations-on-exit  --reportfile build/logs/phpmd.txt
-          echo "Run phpmd-ci"
-
+      - checkout
+      - setups
+      - setup_directories
+      - setup_composer
+      - run:
+          name: phpmd
+          command: |
+            apt-get install phpmd -y
+            phpmd app text codesize,unusedcode,naming \
+              --exclude 'Console,Plugin,tmp,vendor,Vendor' \
+              --ignore-violations-on-exit  --reportfile build/logs/phpmd.txt
 
   phpmd-ci:
-    <<: *phpimg
+    <<: *ubuntuimg
     steps:
     - checkout
-    - add_ssh_keys:
-        fingerprints:
-        - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
     - setups
-    - cake_setup
+    - setup_directories
+    - setup_composer
     - run:
         name: phpmd-ci
         command: |
-          composer global require phpmd/phpmd;
-          which phpmd;
+          # composer global require phpmd/phpmd;
+          apt-get install phpmd -y
           phpmd app xml codesize,unusedcode,naming \
             --exclude 'Console,Plugin,tmp,vendor,Vendor' \
             --ignore-violations-on-exit --reportfile build/logs/phpmd.xml;
-          echo "Run phpmd-ci"
 
   phpcs:
-    <<: *phpimg
+    <<: *ubuntuimg
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints:
-          - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
       - setups
-      - cake_setup
+      - setup_directories
+      - setup_composer
       - run:
           name: phpcs
           command: |
-            # sudo apt-get install php-codesniffer
-            composer global require "squizlabs/php_codesniffer=*"
-            which phpcs
-            sudo ln -s $(which phpcs) /usr/bin/phpcs
+            # composer global require cakephp/cakephp-codesniffer
+            # composer global require "squizlabs/php_codesniffer=*"
+            export COMPOSER_NO_INTERACTION=1
+            composer global require cakephp/cakephp-codesniffer
+            composer global require squizlabs/php_codesniffer ^3.6
+            composer global require slevomat/coding-standard ^6.3.6 -W
+            ln -s ~/.config/composer/vendor/bin/phpcs /usr/bin/phpcs
+            phpcs --config-set installed_paths ~/.config/composer/vendor/cakephp/cakephp-codesniffer,~/.config/composer/vendor/slevomat/coding-standard
             phpcs --config-set ignore_warnings_on_exit 1
             phpcs --config-set ignore_errors_on_exit 1
             phpcs -i
-            # phpcs -v -n --standard=CakePHP \
-            phpcs -v -n --standard=PSR2 \
+            phpcs -v -n --standard=CakePHP \
               --report=summary --ignore=Console,Plugin,tmp,vendor,Vendor,webroot,.css,.js app
-            echo "Run phpcs"
 
   phpcs-ci:
-    <<: *phpimg
+    <<: *ubuntuimg
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints:
-          - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
       - setups
-      - cake_setup
+      - setup_directories
+      - setup_composer
       - run:
           name: phpcs-ci
           command: |
-            # sudo apt-get install php-codesniffer
-            ls -al /home/circleci/.config/
-            mv auth.json /home/circleci/.config/composer
-            # composer require cakephp/cakephp-codesniffer
+            export COMPOSER_NO_INTERACTION=1
             composer global require cakephp/cakephp-codesniffer
-            composer global require "squizlabs/php_codesniffer=*"
-            which phpcs
-            # sudo ln -s $(which phpcs) /usr/bin/phpcs
-            # phpcs --config-set installed_paths app/Vendor/cakephp/cakephp-codesniffer,app/Vendor/slevomat/coding-standard
-            # phpcs --config-set installed_paths app/Vendor/cakephp/cakephp-codesniffer
-            ls /home/circleci/.config/composer/vendor/squizlabs/php_codesniffer/ || echo Not Found 
+            composer global require squizlabs/php_codesniffer ^3.6
+            composer global require slevomat/coding-standard ^6.3.6 -W
+            ln -s ~/.config/composer/vendor/bin/phpcs /usr/bin/phpcs
+            phpcs --config-set installed_paths ~/.config/composer/vendor/cakephp/cakephp-codesniffer,~/.config/composer/vendor/slevomat/coding-standard
             phpcs -i
             phpcs --config-set ignore_warnings_on_exit 1
             phpcs --config-set ignore_errors_on_exit 1
             phpcs -n --standard=CakePHP \
             --ignore=Console,Plugin,tmp,Test,vendor,Vendor,webroot,.css,.js \
             --report-full=build/logs/phpcs_full.txt app
-            echo "Run phpcs-ci"
-      
+
   phpcpd:
-    <<: *phpimg
+    <<: *ubuntuimg
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints:
-          - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
       - setups
-      - cake_setup
+      - setup_directories
+      - setup_composer
       - run:
           name: phpcpd
           command: |
-            # sudo apt-get install phpcpd
             wget -O phpcpd.phar https://phar.phpunit.de/phpcpd.phar;
             chmod a+x phpcpd.phar;
-            sudo mv phpcpd.phar /usr/local/bin/phpcpd;
-            sudo ln -s $(which phpcpd) /usr/bin/phpcpd;
-            # phpcpd --progress --exclude='Vendor,Plugin,vendor' \
+            mv phpcpd.phar /usr/local/bin/phpcpd;
+            ln -s $(which phpcpd) /usr/bin/phpcpd;
             phpcpd --exclude='Vendor,Plugin,vendor' \
               --log-pmd build/logs/pmd-cpd.xml app || true
-            echo "Run phpcpd"
 
   phpdox:
-    <<: *phpimg
+    <<: *ubuntuimg
     steps:
       - checkout
       - setups
+      - setup_directories
+      - setup_composer
       - run:
           name: phpdox
           command: |
-            # phpdox -f phpdox.xml.dist
-            # echo "Run phpdox"
+            apt-get update -y
+            apt-get install phpdox -y
+            phpdox -f phpdox.xml.dist
 
+  
   phpunit:
-    <<: *phpimg2
+    <<: *ubuntuwithpg
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints:
-          - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
       - setups
+      - setup_directories
+      - setup_composer
       - setup_pg_client
       - setup_db_permissions
-      - cake_setup
       - run:
           name: phpunit
           command: |
-            # composer require --dev phpunit/phpunit ^5.6
-            # composer require -W phpunit/phpunit 5.6.3
-            ls -al /home/circleci/.config/
-            mv auth.json /home/circleci/.config/
-            # composer require phpunit/php-timer 1.0.9 # pin timer to 1.0.9
+            cp app/Config/core.php.default app/Config/core.php;
+            cp app/Config/axia-test-database.php app/Config/database.php
+            composer require phpunit/phpunit 3.7.38 -W
             app/Console/cake DbTest.db_test \
               --stderr --testdox --log-junit './build/reports/junit.xml' \
               --coverage-html webroot/coverage \
               --coverage-clover './build/reports/coverage-clover.xml' \
               --configuration './phpunit.xml' app AllTests
-            echo "Run phpunit"
 
   phpcb:
-    <<: *phpimg
+    <<: *ubuntuimg
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints:
-          - "6a:d8:72:76:64:42:5a:71:76:a1:55:2d:82:10:76:04"
       - setups
-      - cake_setup
-      - run:
-          name: ensure-tmp-folders
-          command: |
-            mkdir -p app/tmp/{logs,tests,sessions,cache}
-            mkdir app/tmp/cache/{persistent,models,views}
+      - setup_directories
+      - setup_composer
       - run:
           name: phpcb
           command: |
+            composer global require "mayflower/php-codebrowser=~1.1"
+            ln -s ~/.config/composer/vendor/mayflower/php-codebrowser/bin/phpcb /usr/local/bin/phpcb
             phpcb --log build/logs \
               --source app --output app/webroot/code-browser \
               --ignore 'app/Pluging,app/tmp,app/vendor,app/Vendor'
-            echo "Run phpcb"
 
 workflows:
-  build:
+  build-smoke:
+    jobs:
+      - prepare
+      - phpunit
+
+  build-nightly:
     jobs:
       - prepare
       - pdepend:
           requires: [ prepare ]
       - phpmd-ci:
-          requires: [ prepare, pdepend ]
-      - phpmd:
-          requires: [ prepare, pdepend ]
+          requires: [ pdepend ]
+      - lint
+      - phpmd
       - phpcpd
       - phpcs-ci
       - phpcs
-      - lint
       - phpunit
-      # - phpcb
-      # - phploc
-      # - phpdox
+      - phploc
+      - phpdox
+      - phpcb
+
     triggers:
       - schedule:
-          cron:  */5 * * * *
+          cron:  "0 10 * * *"
           filters:
             branches:
-              only: develop
+              only:
+                - CO-2459
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+version: 2.1
+
+phpimg: &phpimg
+  docker:
+    - image: cimg/php:7.4.26
+      environment:
+        TEST_DATABASE_URL: postgresql://axiauser:aXiadb123@localhost/axiadb
+        POSTGRES_USER: axiauser
+        POSTGRES_DB: axiadb
+        POSTGRES_PASSWORD: aXiadb!123
+
+    - image: cimg/postgres:14.0
+      environment:
+        POSTGRES_USER: axiauser
+        POSTGRES_DB: axiadb
+        POSTGRES_PASSWORD: aXiadb!123
+jobs:
+  build:
+    <<: *phpimg
+
+    steps:
+      - checkout
+      - run:
+          name: Install packages
+          command: |
+            php --version
+
+  prepare:
+    <<: *phpimg
+
+
+    steps:
+      - checkout
+      - run:
+          name: prepare
+          command: |
+            mkdir test1
+            mkdir test1/test2
+            touch test1/test2/file1.txt
+            echo Persisted to workspace > test1/test2/file1.txt
+            mkdir myspace
+            mkdir myspace/space1
+            echo Is the file persisted > myspace/space1/test.txt
+            ls -al
+      - persist_to_workspace:
+          root: ~/
+          paths: "*"
+
+
+  lint:
+    <<: *phpimg
+
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Lint
+          command: |
+            ls -al
+            ls -al myspace
+            ls -al myspace/space1
+            ls -al test1
+            ls -al test1/test2
+            cat test1/test2/file1.txt
+            php -l --exclude='Vendor,Plugin,vendor,Lib,Locale,tmp,*.php' app
+            # echo "run lint"
+  
+
+  phploc:
+    <<: *phpimg
+
+    steps:
+      - checkout
+      - run:
+          name: phploc
+          command: |
+            sudo apt-get update
+            sudo apt-get install phploc
+            # wget https://phar.phpunit.de/phploc.phar
+            wget -O phive.phar "https://phar.io/releases/phive.phar"
+            wget -O phive.phar.asc "https://phar.io/releases/phive.phar.asc"
+            gpg --keyserver hkps://keys.openpgp.org --recv-keys 0x6AF725270AB81E04D79442549D8A98B29B2D5D79
+            gpg --verify phive.phar.asc phive.phar
+            rm phive.phar.asc
+            chmod +x phive.phar
+            sudo mv phive.phar /usr/local/bin/phive
+            echo GOT HERE-------------------------
+            echo y | phive install phploc
+            echo PASSSSSS--------------------
+            phploc --version
+            # # bash -c phploc --log-csv build/logs/phploc.csv app
+            # ./phploc --log-csv build/logs/phploc.csv app
+            # # echo "Run phploc"
+     
+  pdepend:
+    <<: *phpimg
+
+    steps:
+      - checkout
+      - run:
+          name: pdepend
+          command: |
+            echo PASSSSS------------------------------SsSSSSSSSSSSSSSSSSSSSSSSSSS
+            bash -c pdepend --summary-xml=build/pdepend/summary.xml -jdepend-chart=build/pdepend/dependencies.svg --overview-pyramid=build/pdepend/overview-pyramid.svg --jdepend-xml=build/logs/jdepend.xml --ignore=Console,Locale,Plugin,vendor,Vendor app
+            echo  "Run pdepend"
+
+  phpmd-ci:
+    <<: *phpimg
+
+    steps:
+    - checkout
+    - run:
+        name: phpmd-ci
+        command: |
+          sudo apt-get update
+          echo PASSSSS------------------------------SsSSSSSSSSSSSSSSSSSSSSSSSSS
+          bash -c phpmd app xml codesize,unusedcode,naming --exclude 'Console,Plugin,tmp,vendor,Vendor' --reportfile build/logs/phpmd.xml
+          echo "Run phpmd-ci"
+
+  phpcs:
+    <<: *phpimg
+    
+    steps:
+      - checkout
+      - run:
+          name: phpcs
+          command: |
+            phpcs -v -n --standard=CakePHP --report=summary --ignore=Console,Plugin,tmp,vendor,Vendor,webroot,.css,.js app
+            echo "Run phpcs"
+
+  phpcs-ci:
+    <<: *phpimg
+
+    steps:
+      - checkout
+      - run:
+          name: phpcs-ci
+          command: |
+            # bash -c phpcs -n --standard=CakePHP --ignore=Console,Plugin,tmp,Test,vendor,Vendor,webroot,.css,.js --report-full=build/logs/phpcs_full.txt app
+            echo "Run phpcs-ci"
       
+  phpcpd:
+    <<: *phpimg
+
+    steps:
+      - checkout
+
+      - run:
+          name: phpcpd
+          command: |
+            sudo apt-get update
+            sudo apt-get install phpcpd
+            echo PASSSSS------------------------------SsSSSSSSSSSSSSSSSSSSSSSSSSS
+            phpcpd --progress --exclude='Vendor,Plugin,vendor' --log-pmd build/logs/pmd-cpd.xml app
+            echo "Run phpcpd"
+
+  phpdox:
+    <<: *phpimg
+
+    steps:
+      - checkout
+
+      - run:
+          name: phpdox
+          command: |
+            sudo apt-get update
+            sudo apt-get install phpdox
+            echo PASSSSS------------------------------SsSSSSSSSSSSSSSSSSSSSSSSSSS
+            phpdox -f phpdox.xml.dist
+            echo "Run phpdox"
+
+  phpunit:
+    <<: *phpimg
+
+    steps:
+      - checkout
+
+      - run:
+          name: phpunit
+          command: |
+            # bash -c Console/cake DbTest.db_test --stderr --testdox --log-junit '../build/reports/junit.xml' --coverage-html webroot/coverage --coverage-clover '../build/reports/coverage-clover.xml' --configuration '../phpunit.xml' app AllTests
+            echo "Run phpunit"
+  phpcb:
+    <<: *phpimg
+
+    steps:
+      - checkout
+
+      - run:
+          name: ensure-tmp-folders
+          command: |
+            mkdir -p app/tmp/{logs,tests,sessions,cache}
+            mkdir app/tmp/cache/{persistent,models,views}
+
+      - run:
+          name: phpcb
+          command: |
+            # bash -c phpcb --log build/logs --source app --output app/webroot/code-browser --ignore 'app/Pluging,app/tmp,app/vendor,app/Vendor'
+            echo "Run phpcb"
+
+workflows:
+  build:
+    jobs:
+      - build
+      - prepare
+      - pdepend:
+          requires: [ prepare ]
+      - phpmd-ci:
+          requires: [ prepare, pdepend ]
+      - lint:
+          requires: [ prepare ]
+      - phpcpd
+      - phpcs-ci
+      - phploc
+      - phpdox
